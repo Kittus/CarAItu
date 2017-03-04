@@ -1,3 +1,8 @@
+NEAT/*.svg
+NEAT/*.gv
+NEAT/**/*.pyc
+NEAT/Example
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -48,3 +53,29 @@ Build_Data/sharedassets0.assets.resS
 Build_Data/sharedassets1.assets
 Build_Data/sharedassets1.assets.resS
 Assets/_Scenes/About.unity.meta
+
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
+# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+
+NEAT/.idea
+NEAT/.idea
+
+## File-based project format:
+NEAT/*.iws
+
+## Plugin-specific files:
+
+# IntelliJ
+NEAT//out/
+
+# mpeltonen/sbt-idea plugin
+NEAT/.idea_modules/
+
+# JIRA plugin
+NEAT/atlassian-ide-plugin.xml
+
+# Crashlytics plugin (for Android Studio and IntelliJ)
+NEAT/com_crashlytics_export_strings.xml
+NEAT/crashlytics.properties
+NEAT/crashlytics-build.properties
+NEAT/fabric.properties
