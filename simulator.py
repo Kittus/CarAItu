@@ -2,26 +2,53 @@
 import math
 
 
-def line(p1, p2):
+epsilon = 1e-7
+
+
+def line(l):
+    p1 = l[0]
+    p2 = l[1]
     A = (p1[1] - p2[1])
     B = (p2[0] - p1[0])
     C = (p1[0] * p2[1] - p2[0] * p1[1])
     return A, B, -C
 
 
+def in_segment(a, b, x):
+    if abs(a[0] - b[0]) < epsilon:
+        return min(a[1],b[1]) <= x[1] <= max(a[1],b[1])
+    return min(a[0],b[0]) <= x[0] <= max(a[0],b[0])
+
+
+def in_semirecta(a, b, x):
+    if abs(a[0] - b[0]) < epsilon:
+        ax = a[1]
+        bx = b[1]
+        xx = x[1]
+    else:
+        ax = a[0]
+        bx = b[0]
+        xx = x[0]
+    if ax < bx:
+        return ax <= xx
+    else:
+        return xx <= ax
+
+
+# l1 is a segment [[x0,y0],[x1,y1]]
+# l2 is a semirecta [[x0,y0],[x1,y1]] starting at P0 and directed towards P1
 def intersection(l1, l2):
-
-
+    L1 = line(l1)
+    L2 = line(l2)
     D = L1[0] * L2[1] - L1[1] * L2[0]
     Dx = L1[2] * L2[1] - L1[1] * L2[2]
     Dy = L1[0] * L2[2] - L1[2] * L2[0]
     if D != 0:
         x = Dx / D
         y = Dy / D
-
-        return x, y
-    else:
-        return False
+        if in_segment(l1[0], l1[1], [x,y]) and in_semirecta(l2[0], l2[1], [x,y]):
+            return x, y
+    return False
 
 
 def distance(p1, p2):
@@ -63,7 +90,7 @@ class World:
         d_a = (sensor - 2) * math.pi / 4
         p2 = [self.car.x + math.cos(self.car.a + d_a), self.car.y + math.sin(self.car.a + d_a)]
         print("Sensor " + str(sensor) + " line: " + str((self.car.get_pos(), p2)))
-        return line(self.car.get_pos(), p2)
+        return [self.car.get_pos(), p2]
 
     def nextStep(self, delta_angle):
         self.car.a += delta_angle
@@ -100,7 +127,7 @@ class Wall:
         self.y1 = wall_description[1][1]
 
     def get_line(self):
-        return line([self.x0, self.y0], [self.x1, self.y1])
+        return [[self.x0, self.y0], [self.x1, self.y1]]
 
     def __repr__(self):
         return "Wall: " + str(self.get_line())
@@ -120,3 +147,13 @@ print("Sensors: " + str(world.get_sensors()))
 #    print("Car: " + str(world.car.get_pos()) + ", " + str(world.car.get_ang()) + ")")
 #    print("Sensors: " + str(world.get_sensors()))
 # print(str(math.pi*3))
+
+
+#def f_range(x, y, jump):
+#    while x < y:
+#        yield x
+#        x += jump
+
+
+#for x in f_range(-1,2,0.2):
+#    print(str([x,0]) + " in semirecta [0,0],[0,1] -> " + str(in_semirecta([0,0], [1,0], [x,0])))
