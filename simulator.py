@@ -1,7 +1,6 @@
 #!/usr/local/bin/python
 import math
 
-
 epsilon = 1e-7
 
 
@@ -16,8 +15,8 @@ def line(l):
 
 def in_segment(a, b, x):
     if abs(a[0] - b[0]) < epsilon:
-        return min(a[1],b[1]) <= x[1] <= max(a[1],b[1])
-    return min(a[0],b[0]) <= x[0] <= max(a[0],b[0])
+        return min(a[1], b[1]) <= x[1] <= max(a[1], b[1])
+    return min(a[0], b[0]) <= x[0] <= max(a[0], b[0])
 
 
 def in_semirecta(a, b, x):
@@ -46,7 +45,7 @@ def intersection(l1, l2):
     if D != 0:
         x = Dx / D
         y = Dy / D
-        if in_segment(l1[0], l1[1], [x,y]) and in_semirecta(l2[0], l2[1], [x,y]):
+        if in_segment(l1[0], l1[1], [x, y]) and in_semirecta(l2[0], l2[1], [x, y]):
             return x, y
     return False
 
@@ -57,7 +56,7 @@ def distance(p1, p2):
 
 class World:
     speed = 1
-    angular_speed_limit = math.pi/18  # 10º
+    angular_speed_limit = math.pi / 18  # 10º
 
     def __init__(self, file):
         self.walls = []
@@ -109,8 +108,10 @@ class World:
         return [self.car.get_pos, p2]
 
     def next_step(self, delta_angle):
-        if delta_angle > self.angular_speed_limit: delta_angle = self.angular_speed_limit
-        elif delta_angle < self.angular_speed_limit: delta_angle = self.angular_speed_limit
+        if delta_angle > self.angular_speed_limit:
+            delta_angle = self.angular_speed_limit
+        elif delta_angle < -self.angular_speed_limit:
+            delta_angle = self.angular_speed_limit
 
         self.car.a += delta_angle
         self.car.advance(self.speed)
@@ -152,8 +153,8 @@ class Car:
         return self.a
 
     def advance(self, speed):
-        self.x += speed*math.cos(self.a)
-        self.y += speed*math.sin(self.a)
+        self.x += speed * math.cos(self.a)
+        self.y += speed * math.sin(self.a)
 
 
 class Wall:
@@ -191,26 +192,26 @@ print("Heil Welt!")
 # car = Car([0,0,0])
 # print("Car: " + str(car.get_pos()) + ", " + str(car.get_ang()) + ")")
 
-# world = World("track1.txt")
-# print(str(world.walls))
-# print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-# print("Sensors: " + str(world.get_sensors()))
-# for i in range(100):
-#    ns = world.next_step(0)
-#    print("Next step -------> " + str(ns))
-#    if ns < 0:
-#        print("\n\n\n\n\nPARET!!\n\n\n\n\n")
-#    elif ns > 0:
-#        print("\n\nMETA!!   " + str(ns) + "\n\n")
-#    print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-#    print("Sensors: " + str(world.get_sensors()))
+world = World("track1.txt")
+print(str(world.walls))
+print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+print("Sensors: " + str(world.get_sensors()))
+for i in range(100):
+    ns = world.next_step(0)
+    print("Next step -------> " + str(ns))
+    if ns < 0:
+        print("\n\n\n\n\nPARET!!\n\n\n\n\n")
+    elif ns > 0:
+        print("\n\nMETA!!   " + str(ns) + "\n\n")
+    print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+    print("Sensors: " + str(world.get_sensors()))
 
 
-#def f_range(x, y, jump):
-#    while x < y:
-#        yield x
-#        x += jump
+    # def f_range(x, y, jump):
+    #    while x < y:
+    #        yield x
+    #        x += jump
 
 
-#for x in f_range(-1,2,0.2):
-#    print(str([x,0]) + " in semirecta [0,0],[0,1] -> " + str(in_semirecta([0,0], [1,0], [x,0])))
+    # for x in f_range(-1,2,0.2):
+    #    print(str([x,0]) + " in semirecta [0,0],[0,1] -> " + str(in_semirecta([0,0], [1,0], [x,0])))
