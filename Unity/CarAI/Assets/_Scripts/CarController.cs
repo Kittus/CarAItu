@@ -6,7 +6,7 @@ using System.IO;
 public class CarController : MonoBehaviour {
     StreamReader reader;
     public string fileName = "Path.txt";
-    public float velocity = 4.0f;
+    public float velocity = 1f;
     string line;
     Vector3 objective;
     bool moving;
@@ -39,7 +39,7 @@ public class CarController : MonoBehaviour {
                 if (entries.Length == 3)
                 {
                     //Debug.Log(int.Parse(entries[0]) + int.Parse(entries[1]));
-                    objective = new Vector3(int.Parse(entries[0]), 0.1f, int.Parse(entries[1]));
+                    objective = new Vector3(int.Parse(entries[0]), 0.5f, int.Parse(entries[1]));
 
                     var rotationVector = transform.rotation.eulerAngles;
                     rotationVector.y = - int.Parse(entries[2]) + 90;
