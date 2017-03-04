@@ -226,19 +226,19 @@ class Goal:
 # car = Car([0,0,0])
 # print("Car: " + str(car.get_pos()) + ", " + str(car.get_ang()) + ")")
 
-world = World("track1.txt")
-print(str(world.walls))
-print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-print("Sensors: " + str(world.get_sensors()))
-for i in range(100):
-    ns = world.next_step(0)
-    print("Next step -------> " + str(ns))
-    if ns < 0:
-        print("\n\n\n\n\nPARET!!\n\n\n\n\n")
-    elif ns > 0:
-        print("\n\nMETA!!   " + str(ns) + "\n\n")
-    print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-    print("Sensors: " + str(world.get_sensors()))
+# world = World("track1.txt")
+# print(str(world.walls))
+# print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+# print("Sensors: " + str(world.get_sensors()))
+# for i in range(100):
+#     ns = world.next_step(0)
+#     print("Next step -------> " + str(ns))
+#     if ns < 0:
+#         print("\n\n\n\n\nPARET!!\n\n\n\n\n")
+#     elif ns > 0:
+#         print("\n\nMETA!!   " + str(ns) + "\n\n")
+#     print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+#     print("Sensors: " + str(world.get_sensors()))
 
 
 # def f_range(x, y, jump):
