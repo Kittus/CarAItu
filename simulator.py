@@ -60,7 +60,9 @@ class World:
 
     def __init__(self, file):
         self.walls = []
-        self.start_goals = []
+        self.goals = []
+        self.next_goal = 0
+        self.laps = 0
         f = open(file, 'r')
         l = f.readline()
         start_pos = eval(l)
@@ -74,13 +76,13 @@ class World:
             l = f.readline()
         l = f.readline()
         while l != "":
-            self.start_goals.append(Goal(eval(l)))
+            self.goals.append(Goal(eval(l)))
             l = f.readline()
-        self.goals = self.start_goals
 
     def reset_car_position(self):
         self.car.set_pos(self.start_pos)
-        self.goals = self.start_goals
+        self.next_goal = 0
+        self.laps = 0
 
     def set_speed(self,speed):
         self.angular_speed_limit *= speed/self.speed
@@ -88,7 +90,7 @@ class World:
 
     @property
     def num_goals(self):
-        return len(self.start_goals)
+        return len(self.goals)
 
     def get_sensor_line(self, sensor):
         d_a = (sensor - 2) * math.pi / 4
@@ -145,14 +147,15 @@ class World:
         sensor_line = self.get_sensor_line(2)
         n = 0  # num goals crossed
         to_eliminate = []
-        for i in range(len(self.goals)):
-            g = self.goals[i]
-            inters = intersection(g.get_line, sensor_line)
-            if type(inters) != bool and distance(self.car.get_pos, inters) < self.speed:
-                n += 1
-                to_eliminate.append(i)
-        self.goals = [i for j, i in enumerate(self.goals) if j not in to_eliminate]
-        return n
+        g = self.goals[self.next_goal]
+        inters = intersection(g.get_line, sensor_line)
+        if type(inters) != bool and distance(self.car.get_pos, inters) < self.speed:
+            self.next_goal += 1
+            if self.next_goal >= self.num_goals:
+                self.num_goals = 0
+                self.laps += 1
+            return 1
+        return 0
 
 
 class Car:
@@ -226,19 +229,19 @@ class Goal:
 # car = Car([0,0,0])
 # print("Car: " + str(car.get_pos()) + ", " + str(car.get_ang()) + ")")
 
-# world = World("track1.txt")
-# print(str(world.walls))
-# print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-# print("Sensors: " + str(world.get_sensors()))
-# for i in range(100):
-#     ns = world.next_step(0)
-#     print("Next step -------> " + str(ns))
-#     if ns < 0:
-#         print("\n\n\n\n\nPARET!!\n\n\n\n\n")
-#     elif ns > 0:
-#         print("\n\nMETA!!   " + str(ns) + "\n\n")
-#     print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-#     print("Sensors: " + str(world.get_sensors()))
+world = World("track1.txt")
+print(str(world.walls))
+print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+print("Sensors: " + str(world.get_sensors()))
+for i in range(100):
+    ns = world.next_step(0)
+    print("Next step -------> " + str(ns))
+    if ns < 0:
+        print("\n\n\n\n\nPARET!!\n\n\n\n\n")
+    elif ns > 0:
+        print("\n\nMETA!!   " + str(ns) + "\n\n")
+    print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+    print("Sensors: " + str(world.get_sensors()))
 
 
 # def f_range(x, y, jump):
