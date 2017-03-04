@@ -56,9 +56,12 @@ def distance(p1, p2):
 
 
 class World:
+    speed = 1
+    angular_speed_limit = math.pi/18  # 10º
+
     def __init__(self, file):
         self.walls = []
-        self.goals = []
+        self.start_goals = []
         f = open(file, 'r')
         l = f.readline()
         start_pos = eval(l)
@@ -72,35 +75,57 @@ class World:
             l = f.readline()
         l = f.readline()
         while l != "":
-            self.goals.append(Goal(eval(l)))
+            self.start_goals.append(Goal(eval(l)))
             l = f.readline()
+        self.goals = self.start_goals
 
     def reset_car_position(self):
         self.car.set_pos(self.start_pos)
+        self.goals = self.start_goals
+
+    def get_sensor(self, sensor):
+        dist = 999999
+        sensor_line = self.get_sensor_line(sensor)
+        for w in self.walls:
+            inters = intersection(w.get_line, sensor_line)
+            if type(inters) != bool:
+                d = distance(self.car.get_pos, inters)
+                dist = min(d, dist)
+        return dist
 
     def get_sensors(self):
         res = []
         for s in range(5):
-            dist = 999999
-            sensor_line = self.get_sensor_line(s)
-            for w in self.walls:
-                inters = intersection(w.get_line, sensor_line)
-                print("Intersection with wall " + str(w) + ": " + str(inters))
-                if type(inters) != bool:
-                    d = distance(self.car.get_pos, inters)
-                    dist = min(d, dist)
-            res.append(dist)
+            res.append(self.get_sensor(s))
         return res
 
     def get_sensor_line(self, sensor):
         d_a = (sensor - 2) * math.pi / 4
         p2 = [self.car.x + math.cos(self.car.a + d_a), self.car.y + math.sin(self.car.a + d_a)]
-        print("Sensor " + str(sensor) + " line: " + str((self.car.get_pos, p2)))
         return [self.car.get_pos, p2]
 
     def next_step(self, delta_angle):
+        if delta_angle > self.angular_speed_limit: delta_angle = self.angular_speed_limit
+        elif delta_angle < self.angular_speed_limit: delta_angle = self.angular_speed_limit
+
         self.car.a += delta_angle
-        self.car.advance()
+        self.car.advance(self.speed)
+
+        # Check if there is a collision with a wall
+        if self.get_sensor(2) < self.speed: return -1
+
+        # Count the number of goals crossed
+        sensor_line = self.get_sensor_line(2)
+        n = 0  # num goals crossed
+        to_eliminate = []
+        for i in range(len(self.goals)):
+            g = self.goals[i]
+            inters = intersection(g.get_line, sensor_line)
+            if type(inters) != bool and distance(self.car.get_pos, inters) < self.speed:
+                n += 1
+                to_eliminate.append(i)
+        self.goals = [i for j, i in enumerate(self.goals) if j not in to_eliminate]
+        return n
 
 
 class Car:
@@ -122,9 +147,9 @@ class Car:
     def get_ang(self):
         return self.a
 
-    def advance(self):
-        self.x += math.cos(self.a)
-        self.y += math.sin(self.a)
+    def advance(self, speed):
+        self.x += speed*math.cos(self.a)
+        self.y += speed*math.sin(self.a)
 
 
 class Wall:
@@ -162,15 +187,19 @@ print("Heil Welt!")
 # car = Car([0,0,0])
 # print("Car: " + str(car.get_pos()) + ", " + str(car.get_ang()) + ")")
 
-world = World("track1.txt")
-print(str(world.walls))
-print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-print("Sensors: " + str(world.get_sensors()))
-# for i in range(20):
-#    world.nextStep(math.pi/10)
-#    print("Car: " + str(world.car.get_pos()) + ", " + str(world.car.get_ang()) + ")")
+# world = World("track1.txt")
+# print(str(world.walls))
+# print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+# print("Sensors: " + str(world.get_sensors()))
+# for i in range(100):
+#    ns = world.next_step(0)
+#    print("Next step -------> " + str(ns))
+#    if ns < 0:
+#        print("\n\n\n\n\nPARET!!\n\n\n\n\n")
+#    elif ns > 0:
+#        print("\n\nMETA!!   " + str(ns) + "\n\n")
+#    print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
 #    print("Sensors: " + str(world.get_sensors()))
-# print(str(math.pi*3))
 
 
 #def f_range(x, y, jump):
