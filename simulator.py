@@ -58,15 +58,21 @@ def distance(p1, p2):
 class World:
     def __init__(self, file):
         self.walls = []
+        self.goals = []
         f = open(file, 'r')
         l = f.readline()
         start_pos = eval(l)
         start_pos[2] *= math.pi / 180
         self.start_pos = start_pos
         self.car = Car(self.start_pos)
+        f.readline()  # "Walls\n"
+        l = f.readline()
+        while l != "Goals\n":
+            self.walls.append(Wall(eval(l)))
+            l = f.readline()
         l = f.readline()
         while l != "":
-            self.walls.append(Wall(eval(l)))
+            self.goals.append(Goal(eval(l)))
             l = f.readline()
 
     def reset_car_position(self):
@@ -78,10 +84,10 @@ class World:
             dist = 999999
             sensor_line = self.get_sensor_line(s)
             for w in self.walls:
-                inters = intersection(w.get_line(), sensor_line)
+                inters = intersection(w.get_line, sensor_line)
                 print("Intersection with wall " + str(w) + ": " + str(inters))
                 if type(inters) != bool:
-                    d = distance(self.car.get_pos(), inters)
+                    d = distance(self.car.get_pos, inters)
                     dist = min(d, dist)
             res.append(dist)
         return res
@@ -89,10 +95,10 @@ class World:
     def get_sensor_line(self, sensor):
         d_a = (sensor - 2) * math.pi / 4
         p2 = [self.car.x + math.cos(self.car.a + d_a), self.car.y + math.sin(self.car.a + d_a)]
-        print("Sensor " + str(sensor) + " line: " + str((self.car.get_pos(), p2)))
-        return [self.car.get_pos(), p2]
+        print("Sensor " + str(sensor) + " line: " + str((self.car.get_pos, p2)))
+        return [self.car.get_pos, p2]
 
-    def nextStep(self, delta_angle):
+    def next_step(self, delta_angle):
         self.car.a += delta_angle
         self.car.advance()
 
@@ -108,9 +114,11 @@ class Car:
         self.y = pos[1]
         self.a = pos[2]
 
+    @property
     def get_pos(self):
         return [self.x, self.y]
 
+    @property
     def get_ang(self):
         return self.a
 
@@ -126,11 +134,27 @@ class Wall:
         self.x1 = wall_description[1][0]
         self.y1 = wall_description[1][1]
 
+    @property
     def get_line(self):
         return [[self.x0, self.y0], [self.x1, self.y1]]
 
     def __repr__(self):
-        return "Wall: " + str(self.get_line())
+        return "Wall: " + str(self.get_line)
+
+
+class Goal:
+    def __init__(self, wall_description):
+        self.x0 = wall_description[0][0]
+        self.y0 = wall_description[0][1]
+        self.x1 = wall_description[1][0]
+        self.y1 = wall_description[1][1]
+
+    @property
+    def get_line(self):
+        return [[self.x0, self.y0], [self.x1, self.y1]]
+
+    def __repr__(self):
+        return "Goal: " + str(self.get_line)
 
 
 print("Heil Welt!")
@@ -140,7 +164,7 @@ print("Heil Welt!")
 
 world = World("track1.txt")
 print(str(world.walls))
-print("Car: " + str(world.car.get_pos()) + ", " + str(world.car.get_ang()) + ")")
+print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
 print("Sensors: " + str(world.get_sensors()))
 # for i in range(20):
 #    world.nextStep(math.pi/10)
