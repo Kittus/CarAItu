@@ -83,6 +83,10 @@ class World:
         self.car.set_pos(self.start_pos)
         self.goals = self.start_goals
 
+    @property
+    def num_goals(self):
+        return len(self.start_goals)
+
     def get_sensor(self, sensor):
         dist = 999999
         sensor_line = self.get_sensor_line(sensor)
