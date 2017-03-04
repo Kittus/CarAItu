@@ -90,6 +90,11 @@ class World:
     def num_goals(self):
         return len(self.start_goals)
 
+    def get_sensor_line(self, sensor):
+        d_a = (sensor - 2) * math.pi / 4
+        p2 = [self.car.x + math.cos(self.car.a + d_a), self.car.y + math.sin(self.car.a + d_a)]
+        return [self.car.get_pos, p2]
+
     def get_sensor(self, sensor):
         dist = 999999
         sensor_line = self.get_sensor_line(sensor)
@@ -106,10 +111,23 @@ class World:
             res.append(self.get_sensor(s))
         return res
 
-    def get_sensor_line(self, sensor):
-        d_a = (sensor - 2) * math.pi / 4
-        p2 = [self.car.x + math.cos(self.car.a + d_a), self.car.y + math.sin(self.car.a + d_a)]
-        return [self.car.get_pos, p2]
+    def get_forward_line(self, pos):
+        p2 = [pos[0] + math.cos(self.car.a), pos[1] + math.sin(self.car.a)]
+        return [pos, p2]
+
+    def get_dist_to_obstacle(self):
+        dist_r = 999999
+        dist_l = 999999
+        forward_line_right = self.get_forward_line(self.car.get_front_right_pos)
+        forward_line_left = self.get_forward_line(self.car.get_front_left_pos)
+        for w in self.walls:
+            inters_r = intersection(w.get_line, forward_line_right)
+            inters_l = intersection(w.get_line, forward_line_left)
+            if type(inters_r) != bool:
+                dist_r = min(distance(self.car.get_front_right_pos, inters_r), dist_r)
+            if type(inters_l) != bool:
+                dist_l = min(distance(self.car.get_front_left_pos, inters_l), dist_l)
+        return min(dist_l, dist_r)
 
     def next_step(self, delta_angle):
         if delta_angle > self.angular_speed_limit:
@@ -121,7 +139,7 @@ class World:
         self.car.advance(self.speed)
 
         # Check if there is a collision with a wall
-        if self.get_sensor(2) < self.speed: return -1
+        if self.get_dist_to_obstacle() < self.speed: return -1
 
         # Count the number of goals crossed
         sensor_line = self.get_sensor_line(2)
@@ -138,6 +156,9 @@ class World:
 
 
 class Car:
+    width = 3
+    length = 5
+
     def __init__(self, pos):
         self.x = pos[0]
         self.y = pos[1]
@@ -151,6 +172,16 @@ class Car:
     @property
     def get_pos(self):
         return [self.x, self.y]
+
+    @property
+    def get_front_left_pos(self):
+        return [self.x + self.length/2 * math.cos(self.a) + self.width/2 * math.cos(self.a + math.pi/2),
+                self.y + self.length/2 * math.sin(self.a) + self.width/2 * math.sin(self.a + math.pi/2)]
+
+    @property
+    def get_front_right_pos(self):
+        return [self.x + self.length/2 * math.cos(self.a) + self.width/2 * math.cos(self.a - math.pi/2),
+                self.y + self.length/2 * math.sin(self.a) + self.width/2 * math.sin(self.a - math.pi/2)]
 
     @property
     def get_ang(self):
@@ -191,24 +222,23 @@ class Goal:
         return "Goal: " + str(self.get_line)
 
 
-print("Heil Welt!")
 
 # car = Car([0,0,0])
 # print("Car: " + str(car.get_pos()) + ", " + str(car.get_ang()) + ")")
 
-# world = World("track1.txt")
-# print(str(world.walls))
-# print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-# print("Sensors: " + str(world.get_sensors()))
-# for i in range(100):
-#     ns = world.next_step(0)
-#     print("Next step -------> " + str(ns))
-#     if ns < 0:
-#         print("\n\n\n\n\nPARET!!\n\n\n\n\n")
-#     elif ns > 0:
-#         print("\n\nMETA!!   " + str(ns) + "\n\n")
-#     print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
-#     print("Sensors: " + str(world.get_sensors()))
+world = World("track1.txt")
+print(str(world.walls))
+print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+print("Sensors: " + str(world.get_sensors()))
+for i in range(100):
+    ns = world.next_step(0)
+    print("Next step -------> " + str(ns))
+    if ns < 0:
+        print("\n\n\n\n\nPARET!!\n\n\n\n\n")
+    elif ns > 0:
+        print("\n\nMETA!!   " + str(ns) + "\n\n")
+    print("Car: " + str(world.car.get_pos) + ", " + str(world.car.get_ang) + ")")
+    print("Sensors: " + str(world.get_sensors()))
 
 
 # def f_range(x, y, jump):
