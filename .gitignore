@@ -2,6 +2,8 @@ NEAT/*.svg
 NEAT/*.gv
 NEAT/**/*.pyc
 NEAT/Example
+PathContainer/
+PathContainer*
 
 /[Ll]ibrary/
 /[Tt]emp/
