@@ -5,18 +5,21 @@ using System.IO;
 
 public class CarController : MonoBehaviour {
     StreamReader reader;
-    public string fileName = "Path.txt";
+    public string fileName;
     public float velocity = 1f;
     string line;
     Vector3 objective;
     bool moving;
 
     public float range = 100f;
+    public bool lasers = false;
 
     LineRenderer gunLine;
-        Ray shootRay;
+    Ray shootRay;
     RaycastHit shootHit;
     int shootableMask;
+
+    public bool finished = false;
 
     // Use this for initialization
     void Start () {
@@ -25,6 +28,7 @@ public class CarController : MonoBehaviour {
         shootableMask = LayerMask.GetMask("Shootable");
         gunLine.enabled = true;
         moving = false;
+        finished = false;
     }
 	
 	// Update is called once per frame
@@ -38,15 +42,18 @@ public class CarController : MonoBehaviour {
                 string[] entries = line.Split(' ');
                 if (entries.Length == 3)
                 {
-                    //Debug.Log(int.Parse(entries[0]) + int.Parse(entries[1]));
-                    objective = new Vector3(int.Parse(entries[0]), 0.5f, int.Parse(entries[1]));
+                    objective = new Vector3(float.Parse(entries[0]), 0.5f, float.Parse(entries[1]));
 
                     var rotationVector = transform.rotation.eulerAngles;
-                    rotationVector.y = - int.Parse(entries[2]) + 90;
+                    rotationVector.y = - float.Parse(entries[2])/Mathf.PI * 180 + 90;
                     transform.rotation = Quaternion.Euler(rotationVector);
 
                     moving = true;
                 }
+            }
+            else
+            {
+                finished = true;
             }
         }
 
@@ -58,29 +65,31 @@ public class CarController : MonoBehaviour {
         else gameObject.transform.position += (objective - gameObject.transform.position).normalized * velocity;
 
         //Lasers Plotting
+        if (lasers)
+        {
+            for (int i = 0; i < 11; ++i) gunLine.SetPosition(i, transform.position - new Vector3(0, 0.05f, 0));
 
-        for (int i = 0; i < 11; ++i) gunLine.SetPosition(i, transform.position - new Vector3(0,0.05f,0));
+            shootRay.origin = transform.position - new Vector3(0, 0.05f, 0);
+            shootRay.direction = transform.up;
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(1, shootHit.point);
+            else gunLine.SetPosition(1, shootRay.origin + shootRay.direction * range);
 
-        shootRay.origin = transform.position - new Vector3(0, 0.05f, 0);
-        shootRay.direction = transform.up;
-        if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(1, shootHit.point);
-        else gunLine.SetPosition(1, shootRay.origin + shootRay.direction * range);
+            shootRay.direction = -transform.right;
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(3, shootHit.point);
+            else gunLine.SetPosition(3, shootRay.origin + shootRay.direction * range);
 
-        shootRay.direction = - transform.right;
-        if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(3, shootHit.point);
-        else gunLine.SetPosition(3, shootRay.origin + shootRay.direction * range);
+            shootRay.direction = transform.right;
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(5, shootHit.point);
+            else gunLine.SetPosition(5, shootRay.origin + shootRay.direction * range);
 
-        shootRay.direction = transform.right;
-        if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(5, shootHit.point);
-        else gunLine.SetPosition(5, shootRay.origin + shootRay.direction * range);
+            shootRay.direction = Quaternion.Euler(0, 45, 0) * transform.up;
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(7, shootHit.point);
+            else gunLine.SetPosition(7, shootRay.origin + shootRay.direction * range);
 
-        shootRay.direction = Quaternion.Euler(0, 45, 0) * transform.up;
-        if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(7, shootHit.point);
-        else gunLine.SetPosition(7, shootRay.origin + shootRay.direction * range);
-
-        shootRay.direction = Quaternion.Euler(0, -45, 0) * transform.up;
-        if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(9, shootHit.point);
-        else gunLine.SetPosition(9, shootRay.origin + shootRay.direction * range);
+            shootRay.direction = Quaternion.Euler(0, -45, 0) * transform.up;
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(9, shootHit.point);
+            else gunLine.SetPosition(9, shootRay.origin + shootRay.direction * range);
+        }
 
     }
 }
