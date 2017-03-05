@@ -32,8 +32,8 @@ class MyStatisticsReporter(BaseReporter):
         for sid, s in iteritems(species.species):
             species_stats[sid] = dict((k, v.fitness) for k, v in iteritems(s.members))
             #species_cross_validation_stats[sid] = dict((k, v.cross_fitness) for k, v in iteritems(s.members))
-            best_5.extend(sorted([v for k, v in iteritems(s.members)],key=key,reverse=True)[:5])
-        self.most_fit_5_genomes.append(sorted(best_5,key=key,reverse=True)[:5])
+            best_5.extend(sorted([v for k, v in iteritems(s.members)],key=key,reverse=True)) #[:5] later
+        self.most_fit_5_genomes.append(sorted(best_5,key=key,reverse=True))                  #[:5] later
         self.generation_statistics.append(species_stats)
         #self.generation_cross_validation_statistics.append(species_cross_validation_stats)
 
