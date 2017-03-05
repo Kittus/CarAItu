@@ -36,7 +36,7 @@ def in_semirecta(a, b, x):
 
 # l1 is a segment [[x0,y0],[x1,y1]]
 # l2 is a semirecta [[x0,y0],[x1,y1]] starting at P0 and directed towards P1
-def intersection(l1, l2):
+def intersection_segment_semirecta(l1, l2):
     L1 = line(l1)
     L2 = line(l2)
     D = L1[0] * L2[1] - L1[1] * L2[0]
@@ -46,6 +46,21 @@ def intersection(l1, l2):
         x = Dx / D
         y = Dy / D
         if in_segment(l1[0], l1[1], [x, y]) and in_semirecta(l2[0], l2[1], [x, y]):
+            return x, y
+    return False
+
+
+# l1 and l2 are segments [[x0,y0],[x1,y1]]
+def intersection_segments(l1, l2):
+    L1 = line(l1)
+    L2 = line(l2)
+    D = L1[0] * L2[1] - L1[1] * L2[0]
+    Dx = L1[2] * L2[1] - L1[1] * L2[2]
+    Dy = L1[0] * L2[2] - L1[2] * L2[0]
+    if D != 0:
+        x = Dx / D
+        y = Dy / D
+        if in_segment(l1[0], l1[1], [x, y]) and in_segment(l2[0], l2[1], [x, y]):
             return x, y
     return False
 
@@ -101,7 +116,7 @@ class World:
         dist = 999999
         sensor_line = self.get_sensor_line(sensor)
         for w in self.walls:
-            inters = intersection(w.get_line, sensor_line)
+            inters = intersection_segment_semirecta(w.get_line, sensor_line)
             if type(inters) != bool:
                 d = distance(self.car.get_pos, inters)
                 dist = min(d, dist)
@@ -113,23 +128,32 @@ class World:
             res.append(self.get_sensor(s))
         return res
 
-    def get_forward_line(self, pos):
-        p2 = [pos[0] + math.cos(self.car.a), pos[1] + math.sin(self.car.a)]
-        return [pos, p2]
+    # def get_forward_line(self, pos):
+    #     p2 = [pos[0] + math.cos(self.car.a), pos[1] + math.sin(self.car.a)]
+    #     return [pos, p2]
+    #
+    # def get_dist_to_obstacle(self):
+    #     dist_r = 999999
+    #     dist_l = 999999
+    #     forward_line_right = self.get_forward_line(self.car.get_front_right_pos)
+    #     forward_line_left = self.get_forward_line(self.car.get_front_left_pos)
+    #     for w in self.walls:
+    #         inters_r = intersection_segment_semirecta(w.get_line, forward_line_right)
+    #         inters_l = intersection_segment_semirecta(w.get_line, forward_line_left)
+    #         if type(inters_r) != bool:
+    #             dist_r = min(distance(self.car.get_front_right_pos, inters_r), dist_r)
+    #         if type(inters_l) != bool:
+    #             dist_l = min(distance(self.car.get_front_left_pos, inters_l), dist_l)
+    #     return min(dist_l, dist_r)
 
-    def get_dist_to_obstacle(self):
-        dist_r = 999999
-        dist_l = 999999
-        forward_line_right = self.get_forward_line(self.car.get_front_right_pos)
-        forward_line_left = self.get_forward_line(self.car.get_front_left_pos)
-        for w in self.walls:
-            inters_r = intersection(w.get_line, forward_line_right)
-            inters_l = intersection(w.get_line, forward_line_left)
-            if type(inters_r) != bool:
-                dist_r = min(distance(self.car.get_front_right_pos, inters_r), dist_r)
-            if type(inters_l) != bool:
-                dist_l = min(distance(self.car.get_front_left_pos, inters_l), dist_l)
-        return min(dist_l, dist_r)
+    def will_collide(self):
+        init_container_pos = self.car.get_4_container_pos
+        for init_pos in init_container_pos:
+            final_pos = [init_pos[0] + math.cos(self.car.a), init_pos[1] + math.sin(self.car.a)]
+            for w in self.walls:
+                if type(intersection_segments([init_pos, final_pos], w.get_line)) != bool:
+                    return True
+        return False
 
     def next_step(self, delta_angle):
         if delta_angle > self.angular_speed_limit:
@@ -140,7 +164,8 @@ class World:
         self.car.a += delta_angle
 
         # Check if there is a collision with a wall
-        if self.get_dist_to_obstacle() < self.speed:
+        # if self.get_dist_to_obstacle() < self.speed:
+        if self.will_collide():
             self.car.advance(self.speed)
             return -1
 
@@ -149,7 +174,7 @@ class World:
         n = 0  # num goals crossed
         to_eliminate = []
         g = self.goals[self.next_goal]
-        inters = intersection(g.get_line, sensor_line)
+        inters = intersection_segment_semirecta(g.get_line, sensor_line)
         if type(inters) != bool and distance(self.car.get_pos, inters) < self.speed:
             self.next_goal += 1
             if self.next_goal >= self.num_goals:
@@ -160,6 +185,7 @@ class World:
 
         self.car.advance(self.speed)
         return ret
+
 
 class Car:
     width = 3
@@ -188,6 +214,19 @@ class Car:
     def get_front_right_pos(self):
         return [self.x + self.length/2 * math.cos(self.a) + self.width/2 * math.cos(self.a - math.pi/2),
                 self.y + self.length/2 * math.sin(self.a) + self.width/2 * math.sin(self.a - math.pi/2)]
+
+    @property
+    def get_4_container_pos(self):
+        return [
+            [self.x + self.length / 2 * math.cos(self.a) + self.width / 2 * math.cos(self.a + math.pi / 2),
+             self.y + self.length / 2 * math.sin(self.a) + self.width / 2 * math.sin(self.a + math.pi / 2)],
+            [self.x - self.length / 2 * math.cos(self.a) + self.width / 2 * math.cos(self.a + math.pi / 2),
+             self.y - self.length / 2 * math.sin(self.a) + self.width / 2 * math.sin(self.a + math.pi / 2)],
+            [self.x - self.length / 2 * math.cos(self.a) + self.width / 2 * math.cos(self.a - math.pi / 2),
+             self.y - self.length / 2 * math.sin(self.a) + self.width / 2 * math.sin(self.a - math.pi / 2)],
+            [self.x + self.length / 2 * math.cos(self.a) + self.width / 2 * math.cos(self.a - math.pi / 2),
+             self.y + self.length / 2 * math.sin(self.a) + self.width / 2 * math.sin(self.a - math.pi / 2)]
+        ]
 
     @property
     def get_ang(self):
@@ -255,3 +294,6 @@ class Goal:
 
 # for x in f_range(-1,2,0.2):
 #    print(str([x,0]) + " in semirecta [0,0],[0,1] -> " + str(in_semirecta([0,0], [1,0], [x,0])))
+
+# car = Car([0,0,0])
+# print(str(car.get_4_container_pos))
