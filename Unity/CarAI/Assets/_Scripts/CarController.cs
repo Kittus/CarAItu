@@ -19,6 +19,8 @@ public class CarController : MonoBehaviour {
     RaycastHit shootHit;
     int shootableMask;
 
+    Vector3 rotationVector;
+
     public bool finished = false;
 
     // Use this for initialization
@@ -35,21 +37,19 @@ public class CarController : MonoBehaviour {
 	void Update () {
         //Movement Controls
         if (!moving) {
-            line = reader.ReadLine();
+            for (int i = 0; i < velocity; ++i) line = reader.ReadLine();
 
             if (line != null)
             {
                 string[] entries = line.Split(' ');
-                if (entries.Length == 3)
-                {
-                    objective = new Vector3(float.Parse(entries[0]), 0.5f, float.Parse(entries[1]));
+                objective = new Vector3(float.Parse(entries[0]), 0.5f, float.Parse(entries[1]));
 
-                    var rotationVector = transform.rotation.eulerAngles;
-                    rotationVector.y = - float.Parse(entries[2])/Mathf.PI * 180 + 90;
-                    transform.rotation = Quaternion.Euler(rotationVector);
+                rotationVector = transform.rotation.eulerAngles;
+                rotationVector.y = - float.Parse(entries[2])/Mathf.PI * 180 + 90;
+                transform.rotation = Quaternion.Euler(rotationVector);
 
-                    moving = true;
-                }
+                moving = true;
+               
             }
             else
             {
@@ -57,18 +57,13 @@ public class CarController : MonoBehaviour {
             }
         }
 
-        if ((objective - gameObject.transform.position).magnitude < velocity)
-        {
-            gameObject.transform.position = objective;
-            moving = false;
-        }
-        else gameObject.transform.position += (objective - gameObject.transform.position).normalized * velocity;
+        gameObject.transform.position = objective;
+        moving = false;
 
         //Lasers Plotting
+        for (int i = 0; i < 11; ++i) gunLine.SetPosition(i, transform.position - new Vector3(0, 0.05f, 0));
         if (lasers)
         {
-            for (int i = 0; i < 11; ++i) gunLine.SetPosition(i, transform.position - new Vector3(0, 0.05f, 0));
-
             shootRay.origin = transform.position - new Vector3(0, 0.05f, 0);
             shootRay.direction = transform.up;
             if (Physics.Raycast(shootRay, out shootHit, range, shootableMask)) gunLine.SetPosition(1, shootHit.point);
