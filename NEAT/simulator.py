@@ -56,7 +56,7 @@ def distance(p1, p2):
 
 class World:
     speed = 1
-    angular_speed_limit = 3* speed * math.pi / 18  # 10º
+    angular_speed_limit = speed * math.pi / 18  # 10º
 
     def __init__(self, file):
         self.walls = []
@@ -138,10 +138,9 @@ class World:
             delta_angle = self.angular_speed_limit
 
         self.car.a += delta_angle
-        self.car.advance(self.speed)
 
         # Check if there is a collision with a wall
-        if self.get_dist_to_obstacle() < self.speed: return -1
+        if self.get_dist_to_obstacle() < self.speed: ret = -1
 
         # Count the number of goals crossed
         sensor_line = self.get_sensor_line(2)
@@ -152,11 +151,13 @@ class World:
         if type(inters) != bool and distance(self.car.get_pos, inters) < self.speed:
             self.next_goal += 1
             if self.next_goal >= self.num_goals:
-                self.num_goals = 0
+                self.next_goal = 0
                 self.laps += 1
-            return 1
-        return 0
+            ret = 1
+        ret = 0
 
+        self.car.advance(self.speed)
+        return ret
 
 class Car:
     width = 3
