@@ -15,12 +15,15 @@ import my_statistics
 # 2-input XOR inputs and expected outputs.
 # xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 # xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
-world = simulator.World('circuit.txt')
+world = simulator.World('track1.txt')
 
+world.set_speed(.1)
 max_iterations_without_getting_goal = 50
 points_per_goal = 100
 threshold = .9
-generations_to_run=300
+generations_to_run=10
+pop_size=50
+output_mult=world.angular_speed_limit
 
 
 def eval_genomes(genomes, config):
@@ -32,39 +35,41 @@ def eval_genomes(genomes, config):
         sensors=world.get_sensors()
         sensors=tuple(sensors)
         w=net.activate(sensors)
-        res=world.next_step(w)
+        res=world.next_step(w[0]*output_mult*2-output_mult)
         while res>=0 and iterations_without_getting_goal<max_iterations_without_getting_goal:
             if res>0:
                 genome.fitness += points_per_goal-iterations_without_getting_goal
                 iterations_without_getting_goal = 0
             else:
-                iterations_without_getting_goal+=1
+                iterations_without_getting_goal+=.1
             sensors=world.get_sensors()
             sensors=tuple(sensors)
             w=net.activate(sensors)
-            res=world.next_step(w)
+            res=world.next_step(w[0]*output_mult*2-output_mult)
+        genome.fitness+=iterations_without_getting_goal/1
 
 
 def save_simulation(genome,config,file):
-    f = open(file)
+    f = open(file,'w')
     iterations_without_getting_goal = 0.0
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     world.reset_car_position()
     sensors = world.get_sensors()
     sensors = tuple(sensors)
     w = net.activate(sensors)
-    res = world.next_step(w)
+    res = world.next_step(w[0]*output_mult*2-output_mult)
+    # print(w[0]*output_mult*2-output_mult)
     while res >= 0 and iterations_without_getting_goal < max_iterations_without_getting_goal:
         if res > 0:
             iterations_without_getting_goal = 0
         else:
-            iterations_without_getting_goal += 1
+            iterations_without_getting_goal += .1
         sensors = world.get_sensors()
         sensors = tuple(sensors)
         w = net.activate(sensors)
-        res = world.next_step(w)
-        pos=world.car.get_pos()
-        a=world.car.get_ang()
+        res = world.next_step(w[0]*output_mult*2-output_mult)
+        pos=world.car.get_pos
+        a=world.car.get_ang
         f.write('%s %s %s\n' % (pos[0],pos[1],a))
 
 def run(config_file):
@@ -72,13 +77,17 @@ def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
-    config.fitness_threshold = world.get_num_goals()*points_per_goal*threshold
+    config.fitness_threshold = world.num_goals*points_per_goal*threshold*1000
+    config.fitness_threshold = 2300
+    config.pop_size=pop_size
+
 
 
     # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
 
     # Add a stdout reporter to show progress in the terminal.
+    p.add_reporter(neat.StdOutReporter(True))
     stats = my_statistics.MyStatisticsReporter()
     p.add_reporter(stats)
 
@@ -92,6 +101,8 @@ def run(config_file):
     most_fit_5_genomes=stats.get_most_fit_5_genomes()
     for i in range(len(most_fit_5_genomes)):
         generationFolder=baseFolder+'Generation%s/' % (i+1)
+        if not os.path.exists(generationFolder):
+            os.makedirs(generationFolder)
         for j in range(len(most_fit_5_genomes[i])):
             genomeFile=generationFolder+'Path%s.txt' % (j+1)
             save_simulation(most_fit_5_genomes[i][j],config,genomeFile)
