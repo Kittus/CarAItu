@@ -140,7 +140,9 @@ class World:
         self.car.a += delta_angle
 
         # Check if there is a collision with a wall
-        if self.get_dist_to_obstacle() < self.speed: ret = -1
+        if self.get_dist_to_obstacle() < self.speed:
+            self.car.advance(self.speed)
+            return -1
 
         # Count the number of goals crossed
         sensor_line = self.get_sensor_line(2)
@@ -154,7 +156,7 @@ class World:
                 self.next_goal = 0
                 self.laps += 1
             ret = 1
-        ret = 0
+        else: ret = 0
 
         self.car.advance(self.speed)
         return ret
